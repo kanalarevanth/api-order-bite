@@ -1,0 +1,14 @@
+declare type RedisClient = ReturnType<typeof import('redis').createClient>;
+declare type APIController = (req: import('express').Request, res: import('express').Response) => any;
+
+type _IUser = import('./models/users/users').IUser;
+declare type SessionUser = {
+	_id: string;
+	status: _IUser['status'];
+	firstName: _IUser['firstName'];
+	lastName: _IUser['lastName'];
+	email: _IUser['email'];
+	avatar: _IUser['avatar'];
+	thumb: _IUser['thumb'];
+	updatedAt: _IUser['updatedAt'];
+};
