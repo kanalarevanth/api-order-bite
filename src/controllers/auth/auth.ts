@@ -1,65 +1,21 @@
 import throwError from '../../helpers/error';
 import { createHash, verifyHash } from '../../helpers/hash';
-import { getSessionById } from '../../middleware/session/store';
+import { getSessionById, setSessionById, destorySessionById } from '../../middleware/session/store';
 import { prepareSessionData, removeSessions } from '../../helpers/auth';
 import { model } from 'mongoose';
 import { AuthActions } from '../../logging/actions/auth/auth';
 import { APIOperation, createErrorResponseData, createSuccessResponseData } from '../../logging/application-log';
 import { clone } from '../../helpers/common';
-import { jsonObjDiff } from 'json-obj-diff';
-import { RenewHeader } from '../../middleware/renew';
 import { IUser, IUserModel } from '../../models/users/users';
 
 const UserModel = model('User') as IUserModel;
-
-export const renewUser: APIController = async (req, res) => {
-	const operation = new APIOperation();
-	try {
-		const session = req.session;
-		if (!session?.user?._id) {
-			throwError(401);
-		}
-
-		const user = await UserModel.findById(session?.user?._id);
-
-		const sessionData = await prepareSessionData(user);
-		session.user = sessionData;
-
-		res.removeHeader(RenewHeader);
-
-		operation.log(
-			AuthActions.renew_user(req, {
-				userId: sessionData._id,
-				by: sessionData._id,
-				response: createSuccessResponseData(),
-			}),
-		);
-
-		return sessionData;
-	} catch (error) {
-		const errorCode = error?.status || 500;
-		const errorRes = res.createErrorResponse(errorCode, error?.error, error?.errorCode);
-		operation.errorLog(
-			AuthActions.renew_user(req, {
-				response: createErrorResponseData(errorCode, errorRes),
-				meta: {
-					error: {
-						message: error.message,
-						stack: error.stack,
-					},
-				},
-			}),
-		);
-		throw error;
-	}
-};
 
 export const loginUser: APIController = async (req, res) => {
 	const operation = new APIOperation();
 	try {
 		const data = req.body;
-		const sessionID = req.sessionID;
-		const session = req.session;
+		const currentSessionID = req.sessionID;
+		const currentSession = req.session;
 
 		if (!data.email || !data.password) {
 			throwError(400);
@@ -78,7 +34,7 @@ export const loginUser: APIController = async (req, res) => {
 		}
 
 		const sessions = [];
-
+		const sessionData = await prepareSessionData(user);
 		for (const ses of user.sessions) {
 			const sessionDetails = await getSessionById(ses);
 			if (sessionDetails) {
@@ -86,15 +42,16 @@ export const loginUser: APIController = async (req, res) => {
 			}
 		}
 
-		user.sessions = sessions;
-		if (!user.sessions.find((s) => s === sessionID)) {
-			user.sessions.push(sessionID);
+		if (!sessions.find((s) => s === currentSessionID)) {
+			sessions.push(currentSessionID);
+			currentSession.user = sessionData;
+			await setSessionById(currentSessionID, sessionData);
+			const sessionDetailss = await getSessionById(currentSessionID);
 		}
 
-		await user.save({ timestamps: false });
-		const sessionData = await prepareSessionData(user);
+		user.sessions = sessions;
 
-		session.user = sessionData;
+		await user.save({ timestamps: false });
 
 		operation.log(
 			AuthActions.login_user(req, {
@@ -103,9 +60,10 @@ export const loginUser: APIController = async (req, res) => {
 				response: createSuccessResponseData(),
 			}),
 		);
+
 		return {
 			user: sessionData,
-			token: sessionID,
+			token: currentSessionID,
 		};
 	} catch (error) {
 		const errorCode = error?.status || 500;
@@ -141,11 +99,14 @@ export const logoutUser: APIController = async (req, res) => {
 			},
 			{ timestamps: false, new: true },
 		);
-		session.destroy();
 
 		if (!user) {
 			throwError(404);
 		}
+
+		await destorySessionById(sessionID);
+
+		session.destroy();
 
 		operation.log(
 			AuthActions.logout_user(req, {
@@ -175,7 +136,7 @@ export const logoutUser: APIController = async (req, res) => {
 
 export const validateAddUser = async (req, res, data, cb) => {
 	const operation = new APIOperation();
-
+	console.log(data.password);
 	if (!data || !data.firstName || !data.email || !data.password) {
 		const errorCode = 400;
 		const errorRes = res.createErrorResponse(errorCode);
@@ -233,10 +194,8 @@ export const addUser: APIController = async (req, res) => {
 		// 	}
 		// }
 
-		const userData = clone(data);
+		let userData = clone(data);
 		userData.password = createHash(data.password);
-
-		UserModel.deletePrivateProps(userData);
 
 		const newUser = new UserModel(userData);
 		await newUser.save();
@@ -248,7 +207,7 @@ export const addUser: APIController = async (req, res) => {
 			}),
 		);
 
-		return userData;
+		return {};
 	} catch (error) {
 		const errorCode = error?.status || 500;
 		const errorRes = res.createErrorResponse(errorCode, error?.error, error?.errorCode);

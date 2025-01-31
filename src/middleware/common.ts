@@ -1,8 +1,7 @@
 import { checkAuth } from './auth/auth';
 import { checkQuery } from './query';
-import { checkRenewUser } from './renew';
 
-const middlewares = [checkRenewUser, checkQuery];
+const middlewares = [checkQuery];
 
 export const withAuth = () => {
 	return [...middlewares, checkAuth];

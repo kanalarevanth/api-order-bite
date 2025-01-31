@@ -5,29 +5,6 @@ import { IUser, IUserModel } from '../models/users/users';
 
 const UserModel = model('User') as IUserModel;
 
-export const checkAndUpdateSessions = async (userId: string, currentSession = null, currentSessionID = null) => {
-	try {
-		const user = await UserModel.findById(userId.toString());
-		if (user) {
-			const sessionData = await prepareSessionData(user);
-			for (const sessionId of user.sessions) {
-				const session = await getSessionById(sessionId);
-				if (session) {
-					if (currentSessionID === sessionId) {
-						currentSession.user = sessionData;
-					} else {
-						session.user = sessionData;
-						await setSessionById(sessionId, session);
-					}
-				}
-			}
-		}
-		return user;
-	} catch (error) {
-		logger.error(error);
-	}
-};
-
 export const removeSessions = async (user: IUser, currentSession, currentSessionID) => {
 	try {
 		for (const session of user.sessions) {
