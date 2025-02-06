@@ -2,6 +2,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
+import path from 'path';
 import logger from './helpers/logger';
 
 import enhance from './helpers/enhanced-express';
@@ -49,6 +50,8 @@ const startApp = async () => {
 	app.get('/testlb', (req, res) => {
 		res.status(200).send('test response');
 	});
+
+	app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 	app.use(process.env.APP_BASE_URL, apiRouter);
 
