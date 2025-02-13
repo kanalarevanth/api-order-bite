@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { redisClient } from '../../helpers/database-redis';
 
-const { APP_LMS_TOKEN_PREFIX } = process.env;
+const { APP_SESSION_TOKEN_PREFIX } = process.env;
 
 export const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
 	if (req.session?.user) {
@@ -10,7 +10,7 @@ export const checkAuth = async (req: Request, res: Response, next: NextFunction)
 		if (req.originalUrl?.includes('/v1/app')) {
 			const authHeader = req.get('Authorization');
 			if (authHeader?.includes('Bearer ') && authHeader.split('Bearer ')[1]) {
-				let session = await redisClient.directGet(APP_LMS_TOKEN_PREFIX + authHeader.split('Bearer ')[1]);
+				let session = await redisClient.directGet(APP_SESSION_TOKEN_PREFIX + authHeader.split('Bearer ')[1]);
 				req.session = session;
 				if (session?.user) {
 					next();
