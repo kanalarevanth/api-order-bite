@@ -1,13 +1,11 @@
 import express from 'express';
-import userAuthRouter from './auth/user-auth';
-import adminAuthRouter from './auth/admin-auth';
-import { withAuth, withoutAuth } from '../../middleware/common';
-import adminRecipes from './recipes/recipes';
+import userRouter from './user';
+import adminRouter from './admin';
+import { withoutAuth } from '../../middleware/common';
 
 const v1Router = express.Router({ mergeParams: true });
 
-v1Router.use('/user/auth', withoutAuth(), userAuthRouter);
-v1Router.use('/admin/auth', withoutAuth(), adminAuthRouter);
-v1Router.use('/admin/id/recipes', withAuth(), adminRecipes);
+v1Router.use('/user', withoutAuth(), userRouter);
+v1Router.use('/admin', withoutAuth(), adminRouter);
 
 export default v1Router;

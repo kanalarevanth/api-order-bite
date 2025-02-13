@@ -1,8 +1,8 @@
-import { Router } from 'express';
+import express from 'express';
 import { multerValidation } from '../../../helpers/multer';
-// import { getAdminRecipes, addAdminRecipe, updateAdminRecipe, deleteAdminRecipe, validateAddRecipe, validateUpdateRecipe } from '../../../controllers/recipes/recipes';
+// import { getAdminRecipes, addAdminRecipe, updateAdminRecipe, deleteAdminRecipe, validateAddRecipe, validateUpdateRecipe } from '../../../controllers/admin/recipes';
 
-const adminRecipes = Router();
+const adminRecipes = express.Router({ mergeParams: true });
 
 // adminRecipes.get('/', (req, res) => res.handle(getAdminRecipes));
 // adminRecipes.post('/', multerValidation(validateAddRecipe), (req, res) => res.handle(addAdminRecipe));
