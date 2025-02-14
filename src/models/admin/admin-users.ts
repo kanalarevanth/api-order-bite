@@ -1,7 +1,7 @@
 import { model, Document, Schema, Model } from 'mongoose';
 import { CommonSchemaProps, mongooseSchemaProps, mongooseSchemaOptions } from '../helpers/common-props';
 import { deletePrivateProps } from '../helpers/private-props';
-import { IRestaurant } from '../restaurants';
+import { IRestaurant } from './restaurants';
 
 export interface IAdminUser
 	extends Partial<Document>,

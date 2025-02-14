@@ -1,7 +1,7 @@
 declare type RedisClient = ReturnType<typeof import('redis').createClient>;
 declare type APIController = (req: import('express').Request, res: import('express').Response) => any;
 
-type _IUser = import('./models/users/users').IUser;
+type _IUser = import('./models/user/users').IUser;
 declare type SessionUser = {
 	_id: string;
 	status: _IUser['status'];
@@ -13,7 +13,7 @@ declare type SessionUser = {
 	updatedAt: _IUser['updatedAt'];
 };
 
-type _IAdminUser = import('./models/users/admin-users').IAdminUser;
+type _IAdminUser = import('./models/admin/admin-users').IAdminUser;
 declare type SessionAdminUser = {
 	_id: string;
 	status: _IAdminUser['status'];

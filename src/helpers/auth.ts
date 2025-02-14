@@ -1,8 +1,8 @@
 import { model } from 'mongoose';
 import { destorySessionById, getSessionById, setSessionById } from '../middleware/session/store';
 import logger from './logger';
-import { IUser, IUserModel } from '../models/users/users';
-import { IAdminUser, IAdminUserModel } from '../models/users/admin-users';
+import { IUser, IUserModel } from '../models/user/users';
+import { IAdminUser, IAdminUserModel } from '../models/admin/admin-users';
 
 const UserModel = model('User') as IUserModel;
 

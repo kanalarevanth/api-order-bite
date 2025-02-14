@@ -2,9 +2,9 @@ import { IApplicationLog, ResponseData } from '../../type';
 import { Module } from '../../modules';
 import { Request } from 'express';
 import { getAPIDetails } from '../../application-log';
-import { AdminUserModel } from '../../../models/users/admin-users';
+import { UserModel } from '../../../models/user/users';
 
-export const AdminAuthActions = {
+export const AuthActions = {
 	renew_user: (
 		request: Request,
 		info: Partial<{
@@ -26,7 +26,7 @@ export const AdminAuthActions = {
 			by: info.by,
 			userId: request?.session?.user?._id || null,
 			data: info.data,
-			entity: AdminUserModel.collection.collectionName,
+			entity: UserModel.collection.collectionName,
 			entityId: info.userId,
 			api: getAPIDetails(request, info.response, Object.assign(info.meta || {}, { query: request.query })),
 		};
@@ -50,7 +50,7 @@ export const AdminAuthActions = {
 			message: 'Add User',
 			by: request.session.user?._id || null,
 			data: info.data,
-			entity: AdminUserModel.collection.collectionName,
+			entity: UserModel.collection.collectionName,
 			entityId: info.userId,
 			api: getAPIDetails(request, info.response, Object.assign(info.meta || {}, { query: request.query })),
 		};
@@ -76,7 +76,7 @@ export const AdminAuthActions = {
 			by: info.by,
 			userId: request?.session?.user?._id || null,
 			data: info.data,
-			entity: AdminUserModel.collection.collectionName,
+			entity: UserModel.collection.collectionName,
 			entityId: info.userId,
 			api: getAPIDetails(request, info.response, Object.assign(info.meta || {}, { query: request.query })),
 		};
@@ -99,7 +99,7 @@ export const AdminAuthActions = {
 			message: 'User Logout',
 			by: request.session.user?._id || null,
 			userId: request?.session?.user?._id || null,
-			entity: AdminUserModel.collection.collectionName,
+			entity: UserModel.collection.collectionName,
 			entityId: info.userId,
 			api: getAPIDetails(request, info.response, Object.assign(info.meta || {}, { query: request.query })),
 		};

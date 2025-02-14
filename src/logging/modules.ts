@@ -7,5 +7,6 @@ export type Module<T extends ModuleNames> = {
 };
 
 const modules = {
+	admin_management: ['auth', 'recipes'],
 	user_management: ['auth'],
 } as const;

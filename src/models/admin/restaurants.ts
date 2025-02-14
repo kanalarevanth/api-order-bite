@@ -1,9 +1,8 @@
 import { model, Document, Schema, Model } from 'mongoose';
-import { CommonSchemaProps, mongooseSchemaProps, mongooseSchemaOptions } from './helpers/common-props';
-import { deletePrivateProps } from './helpers/private-props';
-import { IAdminUser } from './users/admin-users';
+import { CommonSchemaProps, mongooseSchemaProps, mongooseSchemaOptions } from '../helpers/common-props';
+import { deletePrivateProps } from '../helpers/private-props';
+import { IAdminUser } from './admin-users';
 import { IRestaurantMenu } from './menu';
-
 export interface IRestaurant
 	extends Partial<Document>,
 		CommonSchemaProps<IAdminUser>,
@@ -18,7 +17,7 @@ export interface IRestaurant
 				area: string;
 				pinCode: string;
 			};
-			menu: string | IRestaurantMenu;
+			menu: (string | IRestaurantMenu)[];
 		}> {}
 
 export interface IRestaurantModel extends Model<IRestaurant> {
@@ -37,7 +36,12 @@ const RestaurantSchema = new Schema<IRestaurant, IRestaurantModel>(
 			area: String,
 			pinCode: String,
 		},
-		menu: String,
+		menu: [
+			{
+				type: Schema.Types.ObjectId,
+				ref: 'RestaurantMenu',
+			},
+		],
 		...mongooseSchemaProps('AdminUser'),
 	},
 	{

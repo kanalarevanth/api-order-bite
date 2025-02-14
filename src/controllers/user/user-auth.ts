@@ -3,10 +3,10 @@ import { createHash, verifyHash } from '../../helpers/hash';
 import { getSessionById, setSessionById, destorySessionById } from '../../middleware/session/store';
 import { prepareSessionData, removeSessions } from '../../helpers/auth';
 import { model } from 'mongoose';
-import { AuthActions } from '../../logging/actions/auth/auth';
+import { AuthActions } from '../../logging/actions/user/user-auth';
 import { APIOperation, createErrorResponseData, createSuccessResponseData } from '../../logging/application-log';
 import { clone } from '../../helpers/common';
-import { IUser, IUserModel } from '../../models/users/users';
+import { IUser, IUserModel } from '../../models/user/users';
 
 const UserModel = model('User') as IUserModel;
 

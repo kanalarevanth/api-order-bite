@@ -3,11 +3,11 @@ import { createHash, verifyHash } from '../../helpers/hash';
 import { getSessionById, setSessionById, destorySessionById } from '../../middleware/session/store';
 import { prepareAdminSessionData } from '../../helpers/auth';
 import { model } from 'mongoose';
-import { AdminAuthActions } from '../../logging/actions/auth/admin-auth';
+import { AdminAuthActions } from '../../logging/actions/admin/admin-auth';
 import { APIOperation, createErrorResponseData, createSuccessResponseData } from '../../logging/application-log';
 import { clone } from '../../helpers/common';
-import { IAdminUser, IAdminUserModel } from '../../models/users/admin-users';
-import { IRestaurant, IRestaurantModel } from '../../models/restaurants';
+import { IAdminUser, IAdminUserModel } from '../../models/admin/admin-users';
+import { IRestaurant, IRestaurantModel } from '../../models/admin/restaurants';
 
 const AdminUserModel = model('AdminUser') as IAdminUserModel;
 const RestaurantModel = model('Restaurant') as IRestaurantModel;

@@ -2,9 +2,9 @@ import { IApplicationLog, ResponseData } from '../../type';
 import { Module } from '../../modules';
 import { Request } from 'express';
 import { getAPIDetails } from '../../application-log';
-import { UserModel } from '../../../models/users/users';
+import { AdminUserModel } from '../../../models/admin/admin-users';
 
-export const AuthActions = {
+export const AdminAuthActions = {
 	renew_user: (
 		request: Request,
 		info: Partial<{
@@ -14,10 +14,10 @@ export const AuthActions = {
 			response: ResponseData;
 			meta: any;
 		}>,
-	): IApplicationLog & Module<'user_management'> => {
+	): IApplicationLog & Module<'admin_management'> => {
 		return {
 			type: 'info',
-			module: 'user_management',
+			module: 'admin_management',
 			feature: 'auth',
 			actionType: 'other',
 			action: 'renew_user',
@@ -26,7 +26,7 @@ export const AuthActions = {
 			by: info.by,
 			userId: request?.session?.user?._id || null,
 			data: info.data,
-			entity: UserModel.collection.collectionName,
+			entity: AdminUserModel.collection.collectionName,
 			entityId: info.userId,
 			api: getAPIDetails(request, info.response, Object.assign(info.meta || {}, { query: request.query })),
 		};
@@ -39,10 +39,10 @@ export const AuthActions = {
 			response: ResponseData;
 			meta: any;
 		}>,
-	): IApplicationLog & Module<'user_management'> => {
+	): IApplicationLog & Module<'admin_management'> => {
 		return {
 			type: 'info',
-			module: 'user_management',
+			module: 'admin_management',
 			feature: 'auth',
 			actionType: 'add',
 			action: 'add_user',
@@ -50,7 +50,7 @@ export const AuthActions = {
 			message: 'Add User',
 			by: request.session.user?._id || null,
 			data: info.data,
-			entity: UserModel.collection.collectionName,
+			entity: AdminUserModel.collection.collectionName,
 			entityId: info.userId,
 			api: getAPIDetails(request, info.response, Object.assign(info.meta || {}, { query: request.query })),
 		};
@@ -64,10 +64,10 @@ export const AuthActions = {
 			response: ResponseData;
 			meta: any;
 		}>,
-	): IApplicationLog & Module<'user_management'> => {
+	): IApplicationLog & Module<'admin_management'> => {
 		return {
 			type: 'info',
-			module: 'user_management',
+			module: 'admin_management',
 			feature: 'auth',
 			actionType: 'other',
 			action: 'login_user',
@@ -76,7 +76,7 @@ export const AuthActions = {
 			by: info.by,
 			userId: request?.session?.user?._id || null,
 			data: info.data,
-			entity: UserModel.collection.collectionName,
+			entity: AdminUserModel.collection.collectionName,
 			entityId: info.userId,
 			api: getAPIDetails(request, info.response, Object.assign(info.meta || {}, { query: request.query })),
 		};
@@ -88,10 +88,10 @@ export const AuthActions = {
 			response: ResponseData;
 			meta: any;
 		}>,
-	): IApplicationLog & Module<'user_management'> => {
+	): IApplicationLog & Module<'admin_management'> => {
 		return {
 			type: 'info',
-			module: 'user_management',
+			module: 'admin_management',
 			feature: 'auth',
 			actionType: 'other',
 			action: 'logout_user',
@@ -99,7 +99,7 @@ export const AuthActions = {
 			message: 'User Logout',
 			by: request.session.user?._id || null,
 			userId: request?.session?.user?._id || null,
-			entity: UserModel.collection.collectionName,
+			entity: AdminUserModel.collection.collectionName,
 			entityId: info.userId,
 			api: getAPIDetails(request, info.response, Object.assign(info.meta || {}, { query: request.query })),
 		};
