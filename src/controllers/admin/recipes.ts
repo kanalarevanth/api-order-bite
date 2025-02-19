@@ -283,3 +283,56 @@ export const updateAdminRecipe: APIController = async (req, res) => {
 		throw error;
 	}
 };
+
+export const deleteAdminRecipe: APIController = async (req, res) => {
+	const operation = new APIOperation();
+	try {
+		const id = req.params.recipeId;
+		const session = req.session;
+
+		if (!id) {
+			throwError(400);
+		}
+		const recipe = await RestaurantMenuModel.findById(id);
+
+		if (!recipe || recipe.status === 'deleted') {
+			throwError(404);
+		}
+
+		const oldData = clone(recipe);
+
+		recipe.status = 'deleted';
+		recipe.updatedBy = recipe.deletedBy = session?.user?._id || null;
+		recipe.deletedAt = new Date();
+		await recipe.save();
+
+		const newData = clone(recipe.toJSON());
+		const dataDiff = jsonObjDiff(oldData, newData);
+
+		operation.log(
+			RestaurantMenuActions.delete_recipe(req, {
+				restaurantMenuId: id?.toString(),
+				updatedData: dataDiff,
+				response: createSuccessResponseData(),
+			}),
+		);
+
+		return {};
+	} catch (error) {
+		const errorCode = error?.status || 500;
+		const errorRes = res.createErrorResponse(errorCode, error?.error, error?.errorCode);
+		operation.errorLog(
+			RestaurantMenuActions.delete_recipe(req, {
+				data: req.body,
+				response: createErrorResponseData(errorCode, errorRes),
+				meta: {
+					error: {
+						message: error.message,
+						stack: error.stack,
+					},
+				},
+			}),
+		);
+		throw error;
+	}
+};
