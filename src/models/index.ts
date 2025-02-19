@@ -1,3 +1,6 @@
 export const initModels = () => {
-	require('./users/users');
+	require('./user/users');
+	require('./admin/admin-users');
+	require('./admin/restaurants');
+	require('./admin/menu');
 };

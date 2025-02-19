@@ -1,14 +1,16 @@
 import throwError from '../../helpers/error';
 import { createHash, verifyHash } from '../../helpers/hash';
 import { getSessionById, setSessionById, destorySessionById } from '../../middleware/session/store';
-import { prepareSessionData, removeSessions } from '../../helpers/auth';
+import { prepareAdminSessionData } from '../../helpers/auth';
 import { model } from 'mongoose';
-import { AuthActions } from '../../logging/actions/auth/auth';
+import { AdminAuthActions } from '../../logging/actions/admin/admin-auth';
 import { APIOperation, createErrorResponseData, createSuccessResponseData } from '../../logging/application-log';
 import { clone } from '../../helpers/common';
-import { IUser, IUserModel } from '../../models/users/users';
+import { IAdminUser, IAdminUserModel } from '../../models/admin/admin-users';
+import { IRestaurant, IRestaurantModel } from '../../models/admin/restaurants';
 
-const UserModel = model('User') as IUserModel;
+const AdminUserModel = model('AdminUser') as IAdminUserModel;
+const RestaurantModel = model('Restaurant') as IRestaurantModel;
 
 export const loginUser: APIController = async (req, res) => {
 	const operation = new APIOperation();
@@ -20,10 +22,12 @@ export const loginUser: APIController = async (req, res) => {
 		if (!data.email || !data.password) {
 			throwError(400);
 		}
-		const user = await UserModel.findOne({
+		const user = await AdminUserModel.findOne({
 			status: 'active',
 			email: data.email,
-		}).collation({ locale: 'en_US', numericOrdering: false });
+		})
+			.populate({ path: 'restaurant' })
+			.collation({ locale: 'en_US', numericOrdering: false });
 
 		if (!user) {
 			throwError(404);
@@ -34,7 +38,7 @@ export const loginUser: APIController = async (req, res) => {
 		}
 
 		const sessions = [];
-		const sessionData = await prepareSessionData(user);
+		const sessionData = await prepareAdminSessionData(user);
 		for (const ses of user.sessions) {
 			const sessionDetails = await getSessionById(ses);
 			if (sessionDetails) {
@@ -54,7 +58,7 @@ export const loginUser: APIController = async (req, res) => {
 		await user.save({ timestamps: false });
 
 		operation.log(
-			AuthActions.login_user(req, {
+			AdminAuthActions.login_user(req, {
 				userId: sessionData._id,
 				by: sessionData._id,
 				response: createSuccessResponseData(),
@@ -69,7 +73,7 @@ export const loginUser: APIController = async (req, res) => {
 		const errorCode = error?.status || 500;
 		const errorRes = res.createErrorResponse(errorCode, error?.error, error?.errorCode);
 		operation.errorLog(
-			AuthActions.login_user(req, {
+			AdminAuthActions.login_user(req, {
 				data: req.body,
 				response: createErrorResponseData(errorCode, errorRes),
 				meta: {
@@ -90,7 +94,7 @@ export const logoutUser: APIController = async (req, res) => {
 		const session = req.session;
 		const sessionID = req.sessionID;
 
-		const user = await UserModel.findByIdAndUpdate(
+		const user = await AdminUserModel.findByIdAndUpdate(
 			session?.user?._id,
 			{
 				$pull: {
@@ -109,7 +113,7 @@ export const logoutUser: APIController = async (req, res) => {
 		session.destroy();
 
 		operation.log(
-			AuthActions.logout_user(req, {
+			AdminAuthActions.logout_user(req, {
 				userId: user?._id?.toString(),
 				response: createSuccessResponseData(),
 			}),
@@ -120,7 +124,7 @@ export const logoutUser: APIController = async (req, res) => {
 		const errorCode = error?.status || 500;
 		const errorRes = res.createErrorResponse(errorCode, error?.error, error?.errorCode);
 		operation.errorLog(
-			AuthActions.logout_user(req, {
+			AdminAuthActions.logout_user(req, {
 				response: createErrorResponseData(errorCode, errorRes),
 				meta: {
 					error: {
@@ -136,13 +140,13 @@ export const logoutUser: APIController = async (req, res) => {
 
 export const validateAddUser = async (req, res, data, cb) => {
 	const operation = new APIOperation();
-	console.log(data.password);
-	if (!data || !data.firstName || !data.email || !data.password) {
+
+	if (!data || !data?.userData || !data?.restaurantData || !data.userData.firstName || !data.userData.email || !data.userData.password || !data?.restaurantData.name) {
 		const errorCode = 400;
 		const errorRes = res.createErrorResponse(errorCode);
 
 		operation.errorLog(
-			AuthActions.add_user(req, {
+			AdminAuthActions.add_user(req, {
 				data: data,
 				response: createErrorResponseData(errorCode, errorRes),
 			}),
@@ -151,7 +155,7 @@ export const validateAddUser = async (req, res, data, cb) => {
 		cb(false);
 		return;
 	} else {
-		const existingUser = await UserModel.findOne({
+		const existingUser = await AdminUserModel.findOne({
 			email: data.email,
 			status: { $ne: 'deleted' },
 		})
@@ -162,7 +166,7 @@ export const validateAddUser = async (req, res, data, cb) => {
 			const errorCode = 409;
 			const errorRes = res.createErrorResponse(errorCode);
 			operation.errorLog(
-				AuthActions.add_user(req, {
+				AdminAuthActions.add_user(req, {
 					data: data,
 					response: createErrorResponseData(errorCode, errorRes),
 				}),
@@ -179,29 +183,36 @@ export const validateAddUser = async (req, res, data, cb) => {
 export const addUser: APIController = async (req, res) => {
 	const operation = new APIOperation();
 	try {
-		let data: IUser = req.body;
+		const data: any = req.body;
+		const files = req.files;
 
-		// const files = req.files;
+		let userData: IAdminUser = clone(data.userData);
+		const restaurantData: IRestaurant = clone(data.restaurantData);
 
-		// if (files?.length) {
-		// 	for (const file of files) {
-		// 		if (file.fieldname === 'avatar') {
-		// 			data.avatar = file.location;
-		// 		}
-		// 		if (file.fieldname === 'thumb') {
-		// 			data.thumb = file.location;
-		// 		}
-		// 	}
-		// }
+		if (files?.length) {
+			for (const file of files) {
+				if (file.fieldname === 'avatar') {
+					userData.avatar = file.location;
+				}
+				if (file.fieldname === 'thumb') {
+					userData.thumb = file.location;
+				}
+			}
+		}
 
-		let userData = clone(data);
-		userData.password = createHash(data.password);
+		RestaurantModel.deletePrivateProps(restaurantData);
 
-		const newUser = new UserModel(userData);
+		const newUserRestaurant = new RestaurantModel(restaurantData);
+		await newUserRestaurant.save();
+
+		userData.password = createHash(userData.password);
+		userData.restaurant = newUserRestaurant?._id;
+
+		const newUser = new AdminUserModel(userData);
 		await newUser.save();
 
 		operation.log(
-			AuthActions.add_user(req, {
+			AdminAuthActions.add_user(req, {
 				userId: newUser._id?.toString(),
 				response: createSuccessResponseData(),
 			}),
@@ -212,7 +223,7 @@ export const addUser: APIController = async (req, res) => {
 		const errorCode = error?.status || 500;
 		const errorRes = res.createErrorResponse(errorCode, error?.error, error?.errorCode);
 		operation.errorLog(
-			AuthActions.add_user(req, {
+			AdminAuthActions.add_user(req, {
 				data: req.body,
 				response: createErrorResponseData(errorCode, errorRes),
 				meta: {
